@@ -1,0 +1,15 @@
+[Unit]
+Description=Mumble authenticator para Akkoma
+After=network.target mumble-server.service akkoma.service
+Requires=mumble-server.service
+
+[Service]
+Type=simple
+User=mumble-server
+Group=mumble-server
+ExecStart=/opt/mumble-auth/bin/python3 /opt/mumble-auth/authenticator.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

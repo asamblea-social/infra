@@ -1,0 +1,12 @@
+[Unit]
+Description=Stunnel TLS tunnel para Mumble
+After=network.target mumble-server.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/stunnel /etc/stunnel/mumble.conf
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
