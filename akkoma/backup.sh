@@ -22,3 +22,6 @@ git commit -m "backup ${DATE}" --allow-empty
 git push origin main
 
 echo "Backup completado: ${DATE}"
+
+# 5. Backup MariaDB (Etherpad)
+mysqldump --single-transaction -u ether pad | gzip > "${BACKUP_DIR}/etherpad-db-${DATE}.sql.gz"
