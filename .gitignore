@@ -2,4 +2,3 @@
 *.log
 *secret*
 *password*
-akkoma/config.exs
