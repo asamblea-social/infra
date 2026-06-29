@@ -1,0 +1,13 @@
+[Unit]
+Description=Meilisearch
+After=network.target
+
+[Service]
+User=akkoma
+Group=akkoma
+WorkingDirectory=/var/lib/meilisearch
+ExecStart=/usr/local/bin/meilisearch --db-path /var/lib/meilisearch --http-addr 127.0.0.1:7700 --master-key z6m3xnvzK9i9ubdgn84s23y+QeALU1mgG0PCF7eIwGY=
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

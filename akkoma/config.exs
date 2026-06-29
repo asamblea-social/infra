@@ -43,3 +43,10 @@ config :pleroma, Pleroma.Emails.Mailer,
   tls: :always,
   auth: :always,
   enabled: true
+
+# Meilisearch
+config :pleroma, Pleroma.Search, module: Pleroma.Search.Meilisearch
+config :pleroma, Pleroma.Search.Meilisearch,
+  url: "http://127.0.0.1:7700/",
+  private_key: System.get_env("MEILI_PRIVATE_KEY"),
+  search_key: System.get_env("MEILI_SEARCH_KEY")
