@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+git config --global --add safe.directory /home/nombre/bckups 2>/dev/null || true
 
 BACKUP_DIR="/home/nombre/bckups"
 DATE=$(date +%Y-%m-%d)
