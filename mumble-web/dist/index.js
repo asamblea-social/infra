@@ -2263,7 +2263,7 @@ var VoiceHandler = /*#__PURE__*/function (_Writable) {
           var bytesPerPacket = this._settings.samplesPerPacket * 4; // Float32Array = 4 bytes/sample
 
           var rechunker = stream_chunker__WEBPACK_IMPORTED_MODULE_13___default()(bytesPerPacket);
-          rechunker.pipe(new (__webpack_require__(/*! stream */ "./node_modules/stream-browserify/index.js").Writable)({
+          rechunker.pipe(new stream__WEBPACK_IMPORTED_MODULE_7__["Writable"]({
             write: function write(chunk, encoding, callback) {
               realStream.write(new Float32Array(chunk.buffer, chunk.byteOffset, chunk.byteLength / 4), callback);
             },
@@ -3115,7 +3115,7 @@ var WorkerBasedMumbleUser = /*#__PURE__*/function (_EventEmitter3) {
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = function () {
-  return new Worker(__webpack_require__.p + "9dfb19f1c65a4b17cc5f.worker.js");
+  return new Worker(__webpack_require__.p + "a3ee8878207f085dcbbd.worker.js");
 };
 
 /***/ }),

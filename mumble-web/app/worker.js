@@ -8,7 +8,6 @@ import CodecsBrowser from 'mumble-client-codecs-browser'
 // Polyfill nested webworkers for https://bugs.chromium.org/p/chromium/issues/detail?id=31666
 import 'subworkers'
 
-  console.log('[WORKER INIT] worker.js module loaded at ' + Date.now())
   let sampleRate
   let nextClientId = 1
   let nextVoiceId = 1
@@ -86,7 +85,6 @@ import 'subworkers'
       .pipe(stream)
 
     voiceStreams[voiceId] = resampler
-    console.log('[VOICE DEBUG] voiceStreams[' + voiceId + '] REGISTERED at ' + Date.now())
   }
 
   function setupChannel (id, channel) {
@@ -260,13 +258,8 @@ import 'subworkers'
       target[method].apply(target, payload)
     } else if (data.voiceId != null) {
       let stream = voiceStreams[data.voiceId]
-      console.log('[VOICE DEBUG] chunk voiceId=' + data.voiceId + ' stream=' + (stream ? 'EXISTS' : 'UNDEFINED') + ' at ' + Date.now())
       let buffer = data.chunk
       if (buffer) {
-        if (!stream) {
-          console.error('[VOICE DEBUG] DROPPED chunk, stream not ready for voiceId=' + data.voiceId)
-          return
-        }
         stream.write(Buffer.from(buffer))
       } else {
         delete voiceStreams[data.voiceId]

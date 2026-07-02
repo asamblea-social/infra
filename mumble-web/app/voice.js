@@ -49,7 +49,7 @@ class VoiceHandler extends Writable {
         let realStream = this._client.createVoiceStream()
         let bytesPerPacket = this._settings.samplesPerPacket * 4 // Float32Array = 4 bytes/sample
         let rechunker = chunker(bytesPerPacket)
-        rechunker.pipe(new (require('stream').Writable)({
+        rechunker.pipe(new Writable({
           write (chunk, encoding, callback) {
             realStream.write(new Float32Array(chunk.buffer, chunk.byteOffset, chunk.byteLength / 4), callback)
           },
