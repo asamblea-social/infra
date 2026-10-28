@@ -2,6 +2,9 @@
 import sys
 import Ice
 import logging
+import hashlib
+import threading
+import time
 import psycopg2
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
@@ -34,11 +37,21 @@ log = logging.getLogger(__name__)
 Ice.loadSlice("", ["-I/usr/share/ice/slice", "-I/usr/share/slice", "/usr/share/slice/MumbleServer.ice"])
 import MumbleServer as Murmur
 
+# Boletos SSO de voz.asamblea.social (aditivo: si esto falla, todo sigue como antes)
+try:
+    from ticket_auth import is_ticket, validate_ticket
+    SSO_DISPONIBLE = True
+except Exception as _e:
+    SSO_DISPONIBLE = False
+    log.error("Boletos SSO desactivados: no se pudo importar ticket_auth (%s)", _e)
+
 
 class AkkomaAuthenticator(Murmur.ServerAuthenticator):
 
     def __init__(self):
         self.ph = PasswordHasher()
+        self._usados = {}            # firma del boleto -> hasta cuándo recordarla
+        self._lock = threading.Lock()
         self._db_connect()
 
     def _db_connect(self):
@@ -61,6 +74,29 @@ class AkkomaAuthenticator(Murmur.ServerAuthenticator):
         except Exception:
             self._db_connect()
 
+    def _boleto_valido(self, name, pw):
+        """True solo si 'pw' es un boleto SSO válido para 'name' y no se ha usado antes.
+        Nunca registra el boleto."""
+        if not SSO_DISPONIBLE or not is_ticket(pw):
+            return False
+        try:
+            if not validate_ticket(pw, name):
+                log.info("Boleto no valido para '%s'", name)
+                return False
+        except Exception as e:
+            log.warning("Error validando boleto para '%s': %s", name, type(e).__name__)
+            return False
+        firma = pw.rsplit(":", 1)[-1]
+        ahora = time.time()
+        with self._lock:
+            for k in [k for k, v in self._usados.items() if v < ahora]:
+                del self._usados[k]
+            if firma in self._usados:
+                log.info("Boleto ya usado para '%s'", name)
+                return False
+            self._usados[firma] = ahora + 120
+        return True
+
     def authenticate(self, name, pw, certificates, certhash, certstrong, current=None):
         log.info("Intento de login: '%s'", name)
         if name == "SuperUser":
@@ -72,7 +108,7 @@ class AkkomaAuthenticator(Murmur.ServerAuthenticator):
             cur = self.conn.cursor()
             cur.execute(
                 "SELECT password_hash FROM users "
-                "WHERE nickname = %s AND local = true AND is_active = true "
+                "WHERE nickname = %s AND local = true AND is_active = true AND is_confirmed = true AND is_approved = true "
                 "LIMIT 1",
                 (name,),
             )
@@ -82,10 +118,13 @@ class AkkomaAuthenticator(Murmur.ServerAuthenticator):
             return (-1, None, None)
         if row is None or not row[0]:
             return (-1, None, None)
+        if self._boleto_valido(name, pw):
+            log.info("Login exitoso (boleto): '%s'", name)
+            return (int(hashlib.sha256(name.encode("utf-8")).hexdigest(), 16) % 2000000000 + 1000, name, [])
         try:
             self.ph.verify(row[0], pw)
             log.info("Login exitoso: '%s'", name)
-            uid = abs(hash(name)) % 100000 + 1000
+            uid = int(hashlib.sha256(name.encode("utf-8")).hexdigest(), 16) % 2000000000 + 1000
             return (uid, name, [])
         except VerifyMismatchError:
             log.info("Contrasena incorrecta para '%s'", name)

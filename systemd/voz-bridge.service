@@ -1,0 +1,18 @@
+[Unit]
+Description=Puente OAuth Akkoma -> boleto SSO para voz.asamblea.social
+After=network.target akkoma.service
+Requires=akkoma.service
+[Service]
+Type=simple
+User=mumble-server
+Group=mumble-server
+WorkingDirectory=/opt/mumble-auth
+ExecStart=/opt/mumble-auth/bin/gunicorn --bind 127.0.0.1:8091 --workers 2 --timeout 30 --chdir /opt/mumble-auth voz_bridge:app
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+[Install]
+WantedBy=multi-user.target

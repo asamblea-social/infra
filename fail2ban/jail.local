@@ -1,0 +1,44 @@
+[DEFAULT]
+bantime = 1h
+findtime = 10m
+maxretry = 5
+backend = systemd
+# Nunca bloquear el propio servidor (verificaciones con curl) ni localhost.
+ignoreip = 127.0.0.1/8 ::1 144.126.214.114
+
+[sshd]
+enabled = true
+port = 2024
+logpath = %(sshd_log)s
+
+# 2026-10-21: [pleroma] nunca detectó nada (backend systemd sin journalmatch,
+# logpath viejo de erlang.log y un filtro que buscaba la IP donde Akkoma no la
+# escribe). La sustituyen akkoma-login y akkoma-registro, que leen el
+# access.log de lighttpd (filtros en filter.d/akkoma-*.conf).
+[pleroma]
+enabled = false
+
+# Inicios de sesión fallidos (POST /oauth/token 400/401/403).
+# En octubre nadie pasó de 2 en 10 min.
+[akkoma-login]
+enabled  = true
+backend  = auto
+filter   = akkoma-login
+logpath  = /var/log/lighttpd/access.log
+port     = 80,443
+maxretry = 10
+findtime = 10m
+bantime  = 1h
+
+# Registros FALLIDOS (POST /api/v1/accounts 400/429). Solo cuenta fallos:
+# no afecta a talleres donde varias personas se registran desde la misma red.
+# En octubre: bots 10-21 en 10 min; personas 0-2.
+[akkoma-registro]
+enabled  = true
+backend  = auto
+filter   = akkoma-registro
+logpath  = /var/log/lighttpd/access.log
+port     = 80,443
+maxretry = 10
+findtime = 10m
+bantime  = 6h
